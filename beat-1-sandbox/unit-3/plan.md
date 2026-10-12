@@ -95,11 +95,19 @@ doesn't just make the check always report healthy.
 
 ## Deviations
 
-Nothing changed; the build matched the plan exactly. The fix is the one-line change in
-`api/routes/health.py`'s Redis probe (`redis.Redis.from_url(settings.redis_url,
-decode_responses=True)`, replacing the `host=settings.redis_host, port=settings.redis_port`
-call), plus one new test, `tests/unit/test_health.py`, covering the client construction and
-guarding against regressing to the old `redis_host`/`redis_port` fields. The only thing beyond
-the plan was an automatic `ruff` formatting fix applied by the repo's pre-commit hook during
-`git commit` — a style fix, not a logic or scope change.
+The fix itself matched the plan exactly: the one-line change in `api/routes/health.py`'s Redis
+probe (`redis.Redis.from_url(settings.redis_url, decode_responses=True)`, replacing the
+`host=settings.redis_host, port=settings.redis_port` call), plus one new test,
+`tests/unit/test_health.py`, covering the client construction and guarding against regressing
+to the old `redis_host`/`redis_port` fields.
 
+One thing the plan didn't anticipate: `pyproject.toml` had a per-module mypy suppression for
+`api.routes.health` that explicitly named this issue (`disable_error_code = ["attr-defined",
+"call-overload", "index"]`, with a comment saying "Fixing a seeded bug should remove its entry
+here, the same way it removes the test's xfail marker"). The plan's "no config changes needed"
+line was wrong — I hadn't found this suppression when I wrote it. Removed `"attr-defined"` (the
+code this fix resolves), kept `"call-overload"`/`"index"` (attributed to the separate #61 issue
+this PR doesn't touch).
+
+The only other thing beyond the plan was an automatic `ruff` formatting fix applied by the
+repo's pre-commit hook during `git commit` — a style fix, not a logic change.
