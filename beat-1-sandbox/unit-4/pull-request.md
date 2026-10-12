@@ -1,61 +1,64 @@
-# Unit 4 — Test and Submit
-
-Path: `beat-1-sandbox/unit-4/pull-request.md`
-
-Record of the pull request you opened against the Path Review repo, and of the evaluation
-runs that produced `eval-run.txt`. This file is graded at the path above; a copy kept
-anywhere else in the repository is not read.
-
-Complete every labelled field below. Each is graded on its own; content placed under the wrong
-label is not graded.
-
----
+# Unit 4 - Test and Submit
 
 ## Your pull request
 
 **Pull request**
 
-[Link to the pull request you opened. It must be the pull request's own page on the Path
-Review repo, not your fork's branch page.]
+[https://github.com/codepath/pathreview-ai301-fa26-s1/pull/145](https://github.com/codepath/pathreview-ai301-fa26-s1/pull/145)
 
 **Branch**
 
-[The name of the branch the pull request comes from, exactly as it appears in your fork.
-The naming shape is a type prefix, then the issue number, then a short description. **The
-issue number in the branch name must be the number of the issue the pull request fixes** —
-a name carrying any other number does not satisfy this field.]
+fix/62-redis-health-check-url
 
 ## Eval iterations
 
-Answer all four sections. Quote source text directly; paraphrase does not satisfy these
-fields.
-
 **Run history**
 
-[The agreement score of each run you did, in order. A single run is a complete answer if
-only one run occurred. **The last score in your list must match the agreement line in the
-`eval-run.txt` you committed** — that file is the record of your final run.]
+One complete saved evaluation run:
+
+> agreement: 20/20 scored items  (bar: 18/20: PASS)
+
+The final run covered all 20 scored packages. Its category results were `clear-accept 7/7`,
+`not-tested 4/4`, `silent-drift 4/4`, `standards-wall 2/2`, and `unreviewable 3/3`.
 
 **Package analysis**
 
-[Pick one scored package (`pkg-01` through `pkg-20` — the four `calib-` packages are never
-scored). Name it by id, say what your rubric decided and what the gold label said, and
-explain why your rubric read it that way.]
+Package `pkg-02` received `accept`, and its gold label was also `accept`:
+
+> pkg-02  clear-accept  accept  accept  yes
+
+The package describes the expected behavior as:
+
+> Expected-after per the plan: the record survives the failed save, and a successful save still clears it
+
+The candidate PR matched that plan by changing the three save methods, adding a regression test,
+and reporting observable before/after output. The package also reports:
+
+> `pytest tests/ -q` passes (1462 passed, 12 skipped).
+
+Those facts satisfy the rubric's required checks for plan fidelity, observable test evidence,
+reviewable changes, and complete communication, so the rubric and gold label agree on `accept`.
 
 **Check rationale**
 
-[Quote one check from the `rubric.md` you uploaded to `tools/pr-precheck/`, exactly as it reads now.
-Then say why it reads that way — what you revised to get there, or what you rejected in
-favour of it.]
+The uploaded rubric states:
+
+> Hold if any required check is fail or unclear. An unclear grade is treated like a failure. Ready only if every required check passes.
+
+I chose this rule because the PR decision is binary and an unverifiable claim should not make a
+PR ready. The rubric checks the diff against the plan, the description against the diff, the
+before/after evidence against the test plan, every repository-required check, diff quality, and
+the repository's template and disclosure requirements.
 
 **Trade-offs**
 
-[Every check gives something up. Any one of these is a complete answer: a package whose
-result it changes, a canary you re-ran with `--only`, a case you accept it will miss, or a
-stated reason nothing changed elsewhere. "Nothing changed, and here is how I know" earns
-the point in full when the reason follows.]
+The rubric deliberately allows an honestly reported shortfall rather than requiring every check
+to pass. It states:
 
----
+> A PR that honestly discloses a shortfall is graded on what it discloses, not penalized just for disclosing less than a perfect run.
 
-Related paths: `eval-run.txt` in this directory; your skill's files in
-`tools/pr-precheck/`.
+This means a package can still be accepted when, for example, a typecheck fails for a documented
+third-party environment problem, while an unreported check remains a failure. That trade-off
+preserves the distinction between incomplete-but-honest evidence and evidence that cannot be
+reviewed. The final run's `20/20` agreement and full category scores show that this rule did not
+reduce coverage on the evaluated packages.
