@@ -3,7 +3,7 @@
 Path: `beat-2-contribution/contribution-story.md`
 
 This file is Assignment 5, and it is graded at the path above; a copy kept anywhere else in
-the repository is not read. **Keep every section header below under its exact name** — the
+the repository is not read. **Keep every section header below under its exact name** the
 format criteria grade exactly that. Your course repo link is the whole submission: no tool
 files and no evidence uploads are part of Assignment 5.
 
@@ -14,7 +14,7 @@ files and no evidence uploads are part of Assignment 5.
 **Pull Request:** [GitHub PR link, once opened]
 
 One repository, built across units 5 to 8, telling the whole story of your real
-contribution. Fill it as you work, not at the end — the sections below ask for evidence that
+contribution. Fill it as you work, not at the end. The sections below ask for evidence that
 is far easier to write down as it happens than to reconstruct in the last weekend.
 
 Contribution Number stays `[1]` unless you make more than one contribution this term; it
@@ -124,31 +124,39 @@ My honest read of the scout: it found acceptable issues once I fed it URLs, but 
 
 **Environment Setup**
 
-[What a stranger would need to stand this up: your operating system,
-the relevant versions (language, runtime, package manager, the project
-itself), and how you set the project up. Then the challenges you faced
-and how you solved them, or that none came up.]
+macOS 27.0.1, Node v24.21.0, Logixia v1.12.6 (`main` at e0ce05a, 2026-10-24, the commit v1.12.6 was released from). I cloned my fork (`Andresc06/logixia`), fetched `origin/main` to confirm it matched upstream, and ran `npm install`. The one challenge was that the clone had no `node_modules` yet, so I had to install before the tests could run; `npm install` also printed a husky "install command is DEPRECATED" notice, which did not affect the tests.
 
 **Steps to Reproduce**
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+1. From the repo root, run `npm install`.
+2. Run `npx jest src/utils/__tests__/typed-logger.test.ts --coverage --collectCoverageFrom='src/utils/typed-logger.ts' --coverageReporters=text`.
+3. Observed result: 2 tests pass, but `typed-logger.ts` shows 50% statements, 27.27% branches, 40% functions and 52.77% lines, with lines 96-104, 160-166 and 181-186 uncovered.
 
 **Reproduction Evidence**
 
-- **Commit showing reproduction:** [link to commit in your fork]
-- **Screenshots/logs:** [if applicable]
-- **My findings:** [what you discovered during reproduction; an
-  honest, evidenced cannot-reproduce that led you to re-pick or ask
-  the maintainer belongs here and costs you nothing]
+- **Commit showing reproduction:** none
+- **Screenshots/logs:**
+
+```
+-----------------|---------|----------|---------|---------|------------------------
+File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s      
+-----------------|---------|----------|---------|---------|------------------------
+All files        |      50 |    27.27 |      40 |   52.77 |                        
+ typed-logger.ts |      50 |    27.27 |      40 |   52.77 | 96-104,160-166,181-186 
+-----------------|---------|----------|---------|---------|------------------------
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+```
+
+- **My findings:** The issue says neither `defineLogSchema` nor `createTypedLogger` has a test, and that is only partly true today: `typed-logger.test.ts` exists with 2 tests, both about `error()`. The uncovered lines are the type-mismatch and custom-validator branches (96-104), the shared `withValidation` helper (160-166), and the `warn`, `info`, `debug`, `verbose` and `trace` methods including the fallback to `debug` (181-186). I read the test file and found nothing for `NODE_ENV=production`, `null` as missing, or `raw`. This is a test gap, not a library bug, so there is no failing behavior to show.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: repro-check, run on `claim-draft.md` and `repro-draft.md` together for issue #10.
+- What it produced: a first grade of reject, because `env-recorded` failed: my report had Node and the commit but no OS, which the repo's bug template asks for. It also noted my coverage table looked hand-copied. After my fix it graded all six checks pass and accept.
+- Difficulties: this issue is a test gap, so there is no failing behavior to reproduce, and I had to treat the coverage run as the "trigger". The tool accepted that reading. It also graded a claim that was already posted, so it could not change the claim.
+- What changed: I added an `Environment:` line with my macOS version, and I replaced the hand-copied table with the raw jest output. I did not post the report on the issue, because the PR description will carry it.
 
 ---
 
