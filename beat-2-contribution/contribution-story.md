@@ -1,4 +1,4 @@
-# Contribution: [Issue Title]
+# Contribution: test: cover createTypedLogger and defineLogSchema
 
 Path: `beat-2-contribution/contribution-story.md`
 
@@ -9,9 +9,8 @@ files and no evidence uploads are part of Assignment 5.
 
 **Contribution Number:** [1]
 **Student:** Andres Contreras Alvarez
-**GitHub Username:** [your GitHub username, exactly as it appears on your profile - no @, no
-profile URL. Your comments upstream are identified by this name.]
-**Issue:** [GitHub issue link]
+**GitHub Username:** Andresc06
+**Issue:** https://github.com/Logixia/logixia/issues/10
 **Pull Request:** [GitHub PR link, once opened]
 
 One repository, built across units 5 to 8, telling the whole story of your real
@@ -79,24 +78,20 @@ drafted, what you did with the draft.]
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs in your own words: how you searched, what your scan
-surfaced, what your scout's verdict said, why this issue fits your
-profile, and what you hope to learn. If your scout's verdict on it
-was reject and you chose it anyway, say so here and say why; choosing
-against your own tool silently is what loses points. Close with an
-honest read of the tool itself: where the scout fell short on a real
-wild search and what you changed or would change, or what convinced
-you it held up. **Record the link to your claim comment in this section too.**
-Not claimed yet? Write `claim pending` and today's date where the link goes,
-and add the link the moment your claim lands.]
+I found this issue on the AI301 Issue Selection site. My own scan across all of GitHub found no issue I could keep: the top pick, DrainTracer #66, was claimed by a stranger 8 minutes after it opened, and most of the site's catalog was stale or taken, so I checked the site's issues by hand with `gh` and then ran the scout directly on two of them (Logixia #10 and #17). The scout accepted both. For #10 it passed every required check (human maintainer commits on 2026-10-24, release v1.12.6 on 2026-10-24, not archived, no AI restriction, one test file with a checklist, no assignee, no comments, no linked PR) and gave a difficulty note of straightforward, because the issue names the file, the functions and the line numbers. I picked #10 over #17 because it is one module, while #17 spans three CLI commands and might turn up a separate CSV bug.
+
+It fits my profile: it is TypeScript, it is testing, and I can do it on my own with a clear scope. I hope to learn how a real project structures Jest tests, how to mock a logger and capture stderr, and how the PR process works when `main` is protected and PR titles must follow Conventional Commits. I read the whole `CONTRIBUTING.md` and the PR template; neither says anything about AI-assisted contributions, so there is no ban. The repo is very recent, so I don't yet know how quickly the maintainer reviews outside PRs.
+
+Claim comment: https://github.com/Logixia/logixia/issues/10#issuecomment-6423884423
+
+My honest read of the scout: it found acceptable issues once I fed it URLs, but the search stage did not work for me. The ranking put brand-new, 0-comment issues first, which are exactly the ones other newcomers claim within minutes, and I had to add a drop rule for issues under 3 days old. The scout also cannot see the site's fixed catalog, so queries over all of GitHub returned issues that were not on it. It graded the issue text, not the current repo tree: it said "create `typed-logger.test.ts`", but that file already exists on v1.12.6 and only covers the `error()` regression, which I caught myself before claiming and wrote into my comment (I will extend the file instead of creating it). The `replies` pass is also weak, since the commenters all had `authorAssociation` NONE. What I changed: the freshness rules in the search strategy and the `scope-feasible` patch. What I would still change: let the strategy search the site's organizations and have the rubric check the tree for files an issue says to create.
 
 **Toolkit**
 
-- Tool: issue-scout (your scout: your search strategy, your rubric),
-  and how you used it
-- What it produced: [the scan and its verdict on this issue, described]
-- Difficulties: [where it fell short, or "none met" if none did]
-- What changed: [what you patched or would update, or "nothing"]
+- Tool: issue-scout (my search strategy and my rubric), run as a scan and then in direct mode on two Logixia URLs, plus `gh` for hand checks.
+- What it produced: a first scan that accepted 5 candidates (top pick claimed within 8 minutes), then two direct accepts for Logixia #10 and #17 with a straightforward difficulty note for #10, before and after the scope patch.
+- Difficulties: ranking favored very fresh issues that get claimed immediately; the search could not see the Issue Selection site's catalog; the grade of the issue text missed that the test file already exists; the `replies` check was weak evidence.
+- What changed: added a 3-day drop rule and a 3-to-30-day preference to the search strategy, and replaced my `bounded-scope` check with `scope-feasible` plus a difficulty note, logged in `scan-notes.md`. Next I would add the site's organizations to the queries and check the repo tree for files the issue says to create.
 
 ---
 
