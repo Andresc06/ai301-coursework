@@ -8,7 +8,7 @@ format criteria grade exactly that. Your course repo link is the whole submissio
 files and no evidence uploads are part of Assignment 5.
 
 **Contribution Number:** [1]
-**Student:** [Student name]
+**Student:** Andres Contreras Alvarez
 **GitHub Username:** [your GitHub username, exactly as it appears on your profile - no @, no
 profile URL. Your comments upstream are identified by this name.]
 **Issue:** [GitHub issue link]
@@ -55,10 +55,9 @@ happened; these entries are the toolkit's own timeline.
 All four entries are graded. Keep every heading below, and fill each
 one in the week it belongs to.
 
-**Unit 5: [one line on the tool work]**
+**Unit 5: issue-scout search strategy, a freshness fix, and a direct grade of my picks**
 
-[2-4 sentences: what you built (the scout, your strategy), what broke
-or fell short, what changed because of it.]
+I wrote the search strategy for issue-scout: 15 `gh search issues` queries traced to my fit profile (Python, TypeScript, APIs, testing, data handling), plus ranking filters. The first scan accepted 5 candidates, but the top pick, DrainTracer #66, was claimed by a stranger 8 minutes after the owner opened it, because my ranking put brand-new 0-comment issues first. I added a drop rule for issues created in the last 3 days and a preference for issues 3 to 30 days old, and logged it in `scan-notes.md`. The Issue Selection site only covers a fixed set of repos, so I hand-checked its issues with `gh` and graded my two picks (Logixia #10 and #17) with the scout, which accepted both.
 
 **Unit 6: [one line on the tool work]**
 
