@@ -58,11 +58,9 @@ one in the week it belongs to.
 
 I wrote the search strategy for issue-scout: 15 `gh search issues` queries traced to my fit profile (Python, TypeScript, APIs, testing, data handling), plus ranking filters. The first scan accepted 5 candidates, but the top pick, DrainTracer #66, was claimed by a stranger 8 minutes after the owner opened it, because my ranking put brand-new 0-comment issues first. I added a drop rule for issues created in the last 3 days and a preference for issues 3 to 30 days old, and logged it in `scan-notes.md`. The Issue Selection site only covers a fixed set of repos, so I hand-checked its issues with `gh` and graded my two picks (Logixia #10 and #17) with the scout, which accepted both.
 
-**Unit 6: [one line on the tool work]**
+**Unit 6: patched the rubric's scope check, installed the voice guard, and wrote a repo memory file for Logixia**
 
-[2-4 sentences: the voice-guard, the repo-memory file. What broke or
-fell short, and what changed because of it. "Nothing broke" counts when
-it is true - say how you know.]
+I added four upstream rules to my voice guide (claims, questions, pings) and installed the guard as a hook, then confirmed it fires: `gh issue comment --help` was stopped with "no body the guard can read". What fell short is that I posted my claim on GitHub's website before the guard existed, so it was never checked first; I ran `check_voice.py --draft` on the same text afterward, it passed, and I now run that command before any browser post. I also wrote `CLAUDE.local.md` for Logixia from CONTRIBUTING.md and one scoped orientation run over `src/utils/`, kept it to 48 lines of conclusions, and excluded it with `.git/info/exclude` so it stays out of my PR. The orientation corrected my picture of the issue: `validate()` is a method on the `defineLogSchema()` result, not a standalone function, and the repo has no AGENTS.md, so I removed the template's import line.
 
 **Unit 7: [one line on the tool work]**
 
