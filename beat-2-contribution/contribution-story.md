@@ -11,7 +11,7 @@ files and no evidence uploads are part of Assignment 5.
 **Student:** Andres Contreras Alvarez
 **GitHub Username:** Andresc06
 **Issue:** https://github.com/Logixia/logixia/issues/10
-**Pull Request:** [GitHub PR link, once opened]
+**Pull Request:** https://github.com/Logixia/logixia/pull/113
 
 One repository, built across units 5 to 8, telling the whole story of your real
 contribution. Fill it as you work, not at the end. The sections below ask for evidence that
@@ -62,10 +62,9 @@ I wrote the search strategy for issue-scout: 15 `gh search issues` queries trace
 
 I added four upstream rules to my voice guide (claims, questions, pings) and installed the guard as a hook, then confirmed it fires: `gh issue comment --help` was stopped with "no body the guard can read". What fell short is that I posted my claim on GitHub's website before the guard existed, so it was never checked first; I ran `check_voice.py --draft` on the same text afterward, it passed, and I now run that command before any browser post. I also wrote `CLAUDE.local.md` for Logixia from CONTRIBUTING.md and one scoped orientation run over `src/utils/`, kept it to 48 lines of conclusions, and excluded it with `.git/info/exclude` so it stays out of my PR. The orientation corrected my picture of the issue: `validate()` is a method on the `defineLogSchema()` result, not a standalone function, and the repo has no AGENTS.md, so I removed the template's import line.
 
-**Unit 7: [one line on the tool work]**
+**Unit 7: wrote my ship manifest, passed the ship-gate, and opened PR #113 through the hook**
 
-[2-4 sentences: the ship-gate and your gate manifest. What it produced
-on your real branch, what fought you, what changed because of it.]
+My manifest runs typecheck, `lint:check`, `format:check` and `npm test`, taken from CONTRIBUTING.md and the CI file. The ship-gate passed my branch at 22:56 on 2026-11-02 (all four checks ok, then six pr-precheck checks pass), and when I opened PR #113 through Claude Code at 22:59 the hook honored that pass without running again. Two things fought me: my first manifest was written against a clone that was 30 commits behind `main`, and after I pulled, CONTRIBUTING.md asked for `format:check` too, so I rewrote the lint row and added the format row; `format:check` then flagged my own `ship-manifest.md`, which I fixed with prettier. The pr-precheck also noted that my description's "v2.0.7" was unverified because `package.json` says 1.12.0, so I checked that the v2.0.7 tag points at 60ad8e1 before deciding to leave the description as it was.
 
 **Unit 8: [one line on the tool work]**
 
@@ -97,26 +96,26 @@ My honest read of the scout: it found acceptable issues once I fed it URLs, but 
 
 **Problem Description**
 
-[In your own words, what is broken or missing?]
+Nothing is broken in the library; a test gap is missing. `defineLogSchema` and `createTypedLogger` are public, but most of what they do is never exercised by a test, so a change to them could break users without any test failing.
 
 **Expected Behavior**
 
-[What should happen?]
+`src/utils/__tests__/typed-logger.test.ts` covers the behavior the issue lists: each warning `validate()` can produce, the `NODE_ENV=production` no-op, every log level forwarding to the base logger, the `verbose` and `trace` fallback to `debug`, schema warnings reaching stderr, and `raw` returning the original logger. `npx jest` on that file, `npm run typecheck` and `npm run lint:check` all pass.
 
 **Current Behavior**
 
-[What actually happens?]
+The file has 2 tests, both about `error()`. Running it with coverage on `typed-logger.ts` gives 53.84% of lines on v2.0.7 (60ad8e1; 52.77% when I first measured on e0ce05a, before pulling), so the issue's "neither has a test" is only partly true. Nothing exercises `validate()` directly, the production no-op, `info`/`warn`/`debug`/`verbose`/`trace`, the fallback, or `raw`.
 
 **Affected Components**
 
-[Which parts of the codebase are involved?]
+Only `src/utils/__tests__/typed-logger.test.ts` changes. It tests `defineLogSchema()` and `createTypedLogger()` in `src/utils/typed-logger.ts`, which sends warnings through `internalWarn` in `src/utils/internal-log.ts`. I will not change any of those source files.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Claude Code, reading `typed-logger.ts`, the existing test file and `internal-log.ts`, plus `git` and `gh` to compare my clone with upstream.
+- What it produced: a list of what the issue asks for against what the file already covers, and the discovery that my clone was 30 commits behind `origin/main` (e0ce05a to 60ad8e1).
+- Difficulties: the issue text is out of date in two places. It says to create the test file, which already exists, and its line numbers are from before the latest `typed-logger.ts` change. My first repro and checks ran on the old commit, and I had to re-run them after pulling.
+- What changed: I pulled `main`, re-ran typecheck, lint, format and tests (all passed), and I describe things by function name instead of line number from here on. The pulled commit 60ad8e1 turned out to be the v2.0.7 release, so I name that version in the plan and my claim's v1.12.6 was the version at the time.
 
 ---
 
@@ -164,45 +163,54 @@ Snapshots:   0 total
 
 **Analysis**
 
-[Your analysis of the root cause: what is causing the issue, traced
-to the files and functions involved.]
+The cause is that the only test file for this module, `src/utils/__tests__/typed-logger.test.ts`, was written for one regression: `error()` used to skip schema validation. Its 2 tests cover only `createTypedLogger().error()`. Everything else in `src/utils/typed-logger.ts` has no test:
+
+- `defineLogSchema().validate()`: the type-mismatch branch, the array-reported-as-`"array"` case, the custom `validate` callback, `null` counted as missing, and the early `[]` return from `isProduction()` when `NODE_ENV` is `production`.
+- The `withValidation` helper inside `createTypedLogger`, which `warn`, `info`, `debug`, `verbose` and `trace` all use to validate, call `internalWarn` and forward to the base logger.
+- The `verbose` and `trace` fallbacks to `logger.debug` (`logger.verbose ?? logger.debug`), and the `raw` property.
+
+I measured this on v2.0.7 (commit 60ad8e1, the current `main`) with `npx jest src/utils/__tests__/typed-logger.test.ts --coverage --collectCoverageFrom='src/utils/typed-logger.ts' --coverageReporters=text`: 53.84% of lines, 51.21% of statements, 27.27% of branches and 45.45% of functions. The uncovered lines are 76, 106-114, 170-176 and 191-196, in `validate()`, `withValidation` and the level methods.
 
 **Proposed Solution**
 
-[High-level description of your fix approach, and what you are
-deliberately NOT changing.]
+Add tests to the existing `typed-logger.test.ts`, in new `describe` blocks next to the current one. I will not create a new file. The tests follow the file's setup: a fake `LoggerLike` of `jest.fn()` methods, a spy on `process.stderr.write`, and saving and restoring `LOGIXIA_SILENT_INTERNAL`. The production test saves `NODE_ENV` and restores it afterwards.
+
+I am not changing `typed-logger.ts`, `internal-log.ts` or any other source file. I am not editing or deleting the 2 existing `error()` tests. I am not asserting new behavior for `error()`, because the issue says that is tracked separately. If a test shows a real bug, I will open a separate issue and mark the test `it.failing` instead of fixing the library in this PR.
 
 **Implementation Plan**
 
-1. [Modify file X to do Y]
-2. [Add or change Z]
-3. [Update tests]
+1. Add a `defineLogSchema().validate()` block: missing required field; `null` counted as missing; wrong type gives `expected type "number" but got "string"`; an array where another type is expected is reported as `"array"`; the custom `validate` callback's message is included; returns `[]` when `NODE_ENV=production`, with the env var restored in `afterEach`.
+2. Add a `createTypedLogger` block: `info`, `warn` and `debug` forward the same message and data to the base logger; `verbose` and `trace` fall back to `debug` when the base logger has no such method, and use their own method when it exists; schema warnings reach stderr with the right `level=`; nothing is warned when there is no schema or no data; `raw` is the original logger.
+3. Run `npx jest src/utils/__tests__/typed-logger.test.ts --coverage --collectCoverageFrom='src/utils/typed-logger.ts' --coverageReporters=text` and compare it with the 53.84% line coverage measured on v2.0.7 (60ad8e1) before my change.
+4. Run the manifest checks: `npm run typecheck`, `npm run lint:check`, `npm run format:check`, `npm test`.
+5. Open the PR titled `test: ...` with `Closes #10`, and say in the description that I used AI assistance.
 
 [Record deviations here as they happen: what changed mid-build and
 why. A recorded deviation is honest work; silent drift is not.]
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: plan-check, run on `plan.md` and `plan-comment.md` for issue #10, with my voice guard (`check_voice.py --draft`) on the comment.
+- What it produced: a first verdict of reject. Six checks passed, but `honest-about-unknowns` came back unclear because the plan stated 52.77% line coverage as measured fact while the same command gave 53.84% on current `main`, and the number had no run shown next to it. After I fixed it, plan-check graded accept.
+- Difficulties: my number came from the older commit e0ce05a, and I had not noticed that the commit I pulled to (60ad8e1) is the v2.0.7 release, so my drafts named v1.12.6. The voice guard also stopped my revised comment once, because I had dropped the "first contribution" line.
+- What changed: I re-measured on v2.0.7 (60ad8e1), pasted the coverage row into the comment, named the version and commit, updated `plan.md` and this section, and put the first-contribution line back.
 
 ---
 
 ## Testing Strategy
 
-[What observable checks prove the fix: your reproduction steps re-run
-against the built change (before and after), and the repo's own test
-suite or checks with the outcome shown. "Tests pass" with nothing
-observable named is not a strategy.]
+This change adds tests only, so the checks are about whether the new tests cover the behavior and would catch it breaking. Full output is in `test_evidence.md`.
+
+1. **Reproduction, before and after.** Running `npx jest src/utils/__tests__/typed-logger.test.ts --coverage --collectCoverageFrom='src/utils/typed-logger.ts' --coverageReporters=text` on `main` (v2.0.7, 60ad8e1) gives 2 tests and 53.84% of lines. On my branch the same command gives 30 tests and 97.43% of lines (statements 97.56%, branches 96.96%, functions 100%). The only uncovered line is 76, the `catch` in `isProduction()` for runtimes without `process`, which the issue does not ask for.
+2. **The tests fail when the library breaks.** I temporarily broke `typed-logger.ts` four ways and restored it each time: removing the production early return failed 1 test, reporting arrays as `typeof value` failed 2, removing the `verbose` fallback failed 2, and not treating `null` as missing failed 1.
+3. **The repo's checks.** `npm run typecheck`, `npm run lint:check` and `npm run format:check` print no errors, and `npm test` gives 114 suites passed, 1 skipped, 1812 tests passed and 2 skipped, with exit code 0.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: jest with `--coverage`, my ship manifest's four commands, and Claude Code to run the temporary breakages and assemble `test_evidence.md` from the saved outputs.
+- What it produced: the before and after coverage tables (53.84% to 97.43% of lines), four breakages that each fail at least one new test, and a clean run of all four manifest checks.
+- Difficulties: the test-name placeholder bug described in Implementation Notes slipped through all the checks, because the tests still passed. The full `npm test` output is mostly expected simulated-failure log lines, so `test_evidence.md` keeps the commands and the summary and says what it left out.
+- What changed: I fixed the test name and re-ran the coverage command and the manifest checks so the evidence matches the final file.
 
 ---
 
@@ -211,46 +219,42 @@ observable named is not a strategy.]
 [A running log, added to as you work. Date each entry. What you
 built, decisions you made when you made them, wrong turns included.]
 
-**[Date]**
+**2026-11-02**
 
-[Entry]
+Created branch `test/typed-logger-coverage` from `main` at 60ad8e1 (CONTRIBUTING.md only says to branch from `main`). Claude Code wrote the tests as two new `describe` blocks in the existing `typed-logger.test.ts`, one for `defineLogSchema().validate()` and one for `createTypedLogger`, following the plan, and I ran the commands. The plan did not change. I committed it as `test: cover defineLogSchema().validate() and createTypedLogger` (62b7f90); the pre-commit hook ran eslint and prettier on the file.
 
-**[Date]**
+**2026-11-02**
 
-[Entry]
+Looking at the jest output, two of the test names printed a literal `%s` ("falls back to debug when the base logger has no %s method"), because `it.each` was only given one value for two placeholders. I changed the name to "falls back to debug when the base logger lacks it", re-ran the coverage command and the four manifest checks, and will include the fix in a second commit. I also broke `typed-logger.ts` four ways to check that the tests fail without the library behavior; the results are in Testing Strategy.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Claude Code to write the tests and run the checks, with me doing the git steps (branch, stash, commit) myself.
+- What it produced: 28 new tests in `typed-logger.test.ts` (230 lines added), with typecheck, lint and format clean.
+- Difficulties: the `%s` test-name bug above, and the fact that a coverage number and passing tests did not show it.
+- What changed: I read the test names in the jest output, not just the pass count, and fixed the name before opening the PR.
 
 ---
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when opened]
+**PR Link:** https://github.com/Logixia/logixia/pull/113
 
-**PR Description:** [what the PR says; much of the content above
-adapts into it]
+**PR Description:** The title is `test: cover defineLogSchema validate and createTypedLogger`, and the description follows the repo's PR template. It flags that this is my first contribution, then says that on v2.0.7 (60ad8e1) `typed-logger.test.ts` only had 2 tests, both for `error()`, so I added two `describe` blocks (for `defineLogSchema().validate()` and `createTypedLogger`) with no source change, and ends the first section with `Closes #10`. "How I tested it" shows the same coverage command before and after (2 tests and 53.84% of lines, then 30 tests and 97.43%), the four temporary breakages that each fail at least one new test, and the typecheck, lint, format and test checks passing. The checklist is ticked with N/A reasons where they apply, and Notes for Reviewers says how I used Claude Code and what I did myself.
 
 **Maintainer Feedback:**
 
-- [Date]: [feedback received, or "none yet"; silence is a normal
-  state and costs you nothing]
-- [Date]: [how you addressed it]
+- 2026-11-02: none yet. CI on a first-time contributor's PR waits for a maintainer to approve the run, so lint, typecheck, tests and build have not started.
+- 2026-11-02: nothing to address yet.
 
-**Status:** [Awaiting review / Iterating / Merged / Closed. The
-status is a fact you record, never a grade: the PR is graded as
-opened.]
+**Status:** Awaiting review
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: the ship-gate (my manifest plus my pr-precheck), run by hand on the branch and then as a hook on `gh pr create`.
+- What it produced: PASS at 22:56 with all four repo checks ok and six pr-precheck checks pass; the hook honored that pass at 22:59 and let PR #113 open on `Logixia/logixia` from my fork.
+- Difficulties: an early hook test stopped `gh pr create --help` as intended; the pr-precheck flagged the v2.0.7 label as unverified because `package.json` says 1.12.0; and the checks I first wrote ran against stale code.
+- What changed: I verified that the v2.0.7 tag points at 60ad8e1 and left the description alone, re-ran the checks after pulling, and updated the manifest to match CONTRIBUTING.md.
 
 ---
 
