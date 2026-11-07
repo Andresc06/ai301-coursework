@@ -66,10 +66,9 @@ I added four upstream rules to my voice guide (claims, questions, pings) and ins
 
 My manifest runs typecheck, `lint:check`, `format:check` and `npm test`, taken from CONTRIBUTING.md and the CI file. The ship-gate passed my branch at 22:56 on 2026-11-02 (all four checks ok, then six pr-precheck checks pass), and when I opened PR #113 through Claude Code at 22:59 the hook honored that pass without running again. Two things fought me: my first manifest was written against a clone that was 30 commits behind `main`, and after I pulled, CONTRIBUTING.md asked for `format:check` too, so I rewrote the lint row and added the format row; `format:check` then flagged my own `ship-manifest.md`, which I fixed with prettier. The pr-precheck also noted that my description's "v2.0.7" was unverified because `package.json` says 1.12.0, so I checked that the v2.0.7 tag points at 60ad8e1 before deciding to leave the description as it was.
 
-**Unit 8: [one line on the tool work]**
+**Unit 8: installed the PR monitor, wrote my playbook from five merged outside PRs, and ran it on PR #113**
 
-[2-4 sentences: the PR-monitor and your playbook. What it read, what it
-drafted, what you did with the draft.]
+The monitor read PR #113 on 2026-11-07 (opened 4 days earlier, no checks reported, review required, one review from Copilot's bot that listed no issues, no human reply) and drafted "No reply": a wait note, not a message, so I did not send anything. What could have confused me is that its state line says `FEEDBACK-IN`, because it counts the bot review as feedback; the draft only came out right because my playbook says a bot review is not a maintainer answer and does not reset the quiet-day count. I set the nudge threshold at 8 quiet days from the wait times of five merged outside PRs (1.4 to 5.0 days, merged in batches), so the earliest nudge is 2026-11-11, and I will run the monitor again then or when a person replies.
 
 ---
 
@@ -185,8 +184,7 @@ I am not changing `typed-logger.ts`, `internal-log.ts` or any other source file.
 4. Run the manifest checks: `npm run typecheck`, `npm run lint:check`, `npm run format:check`, `npm test`.
 5. Open the PR titled `test: ...` with `Closes #10`, and say in the description that I used AI assistance.
 
-[Record deviations here as they happen: what changed mid-build and
-why. A recorded deviation is honest work; silent drift is not.]
+Deviations: none. The plan did not change during the build. The only change to my own work was fixing the `it.each` test titles, recorded in Implementation Notes.
 
 **Toolkit**
 
@@ -216,16 +214,21 @@ This change adds tests only, so the checks are about whether the new tests cover
 
 ## Implementation Notes
 
-[A running log, added to as you work. Date each entry. What you
-built, decisions you made when you made them, wrong turns included.]
-
 **2026-11-02**
 
 Created branch `test/typed-logger-coverage` from `main` at 60ad8e1 (CONTRIBUTING.md only says to branch from `main`). Claude Code wrote the tests as two new `describe` blocks in the existing `typed-logger.test.ts`, one for `defineLogSchema().validate()` and one for `createTypedLogger`, following the plan, and I ran the commands. The plan did not change. I committed it as `test: cover defineLogSchema().validate() and createTypedLogger` (62b7f90); the pre-commit hook ran eslint and prettier on the file.
 
 **2026-11-02**
 
-Looking at the jest output, two of the test names printed a literal `%s` ("falls back to debug when the base logger has no %s method"), because `it.each` was only given one value for two placeholders. I changed the name to "falls back to debug when the base logger lacks it", re-ran the coverage command and the four manifest checks, and will include the fix in a second commit. I also broke `typed-logger.ts` four ways to check that the tests fail without the library behavior; the results are in Testing Strategy.
+Looking at the jest output, two of the test names printed a literal `%s` ("falls back to debug when the base logger has no %s method"), because `it.each` was only given one value for two placeholders. I changed the name to "falls back to debug when the base logger lacks it", re-ran the coverage command and the four manifest checks, and committed the fix as a second commit (9d790b9). I also broke `typed-logger.ts` four ways to check that the tests fail without the library behavior; the results are in Testing Strategy.
+
+**2026-11-02**
+
+Ran the ship-gate by hand on the branch and it passed at 22:56. Its pr-precheck flagged that "v2.0.7" in my description was unverified because `package.json` says 1.12.0, so I checked that the v2.0.7 tag points at 60ad8e1 and left the description as it was. At 22:59 I opened PR #113 through Claude Code, and the hook honored the earlier pass.
+
+**2026-11-07**
+
+Installed the PR monitor, wrote the playbook, and ran the monitor on PR #113. It drafted a wait note because the only feedback was Copilot's bot review and day 4 is under my 8-day threshold. I sent nothing and posted nothing on the thread.
 
 **Toolkit**
 
@@ -244,8 +247,7 @@ Looking at the jest output, two of the test names printed a literal `%s` ("falls
 
 **Maintainer Feedback:**
 
-- 2026-11-02: none yet. CI on a first-time contributor's PR waits for a maintainer to approve the run, so lint, typecheck, tests and build have not started.
-- 2026-11-02: nothing to address yet.
+- 2026-11-07: none yet from a person. Copilot's review bot commented 90 seconds after I opened the PR and listed no issues, so there was nothing to fix. CI on a first-time contributor's PR waits for a maintainer to approve the run, so lint, typecheck, tests and build have not started.
 
 **Status:** Awaiting review
 
@@ -262,25 +264,21 @@ Looking at the jest output, two of the test names printed a literal `%s` ("falls
 
 **Technical Skills Gained**
 
-[What you learned technically, named concretely.]
+I learned to measure a test gap with `jest --coverage --collectCoverageFrom=<file> --coverageReporters=text`, and to read the uncovered line ranges to see which branches have no test (here `validate()`, the `withValidation` helper and the `verbose`/`trace` fallback). I learned how this repo's tests capture stderr (a spy on `process.stderr.write`, with `LOGIXIA_SILENT_INTERNAL` and `NODE_ENV` saved and restored), and that `it.each` with one value does not fill a second `%s` in a test title. I also learned to prove a test is worth keeping by temporarily breaking the library four ways and checking that the tests fail, and how a fork and `gh repo set-default Logixia/logixia` decide where a PR opens.
 
 **Challenges Overcome**
 
-[What was hard and how you solved it; point at the real events, the
-Toolkit blocks above are full of them.]
+The hardest part was that the issue and my own numbers were out of date. The issue said to create `typed-logger.test.ts`, which already existed, and my clone was 30 commits behind, so I re-ran the checks after pulling. My 52.77% coverage figure came from the older commit; plan-check caught that `main` gives 53.84% and I re-measured and put the real run in the comment. Smaller snags were `format:check` flagging my own manifest file, the voice guard stopping my plan comment for dropping the "first contribution" line, and the `%s` test titles that passed every check. Since the PR opened, the hard part is waiting: CI needs a maintainer's approval and no person has replied yet.
 
 **What I'd Do Differently Next Time**
 
-[Reflection on your process.]
+I would fetch and compare with upstream before writing any repro, and write the commit hash next to every number I report, because both of my version mix-ups came from skipping that. I would make syncing with upstream and recording the exact commit SHA my first step, and quote that one SHA everywhere instead of a version name, since a version can differ between a release tag and `package.json`. I would read test names in the output and read my own diff before committing, not just the pass count: green checks and a coverage percentage are summaries, and they did not catch the `%s` in my test titles. I would check a version claim against the release tag earlier, and I would post my claim only after the voice guard exists, as I did not in unit 6. I would also look at how fast the maintainer merges outside PRs before choosing an issue, so I know in advance how long the wait could be.
 
 ---
 
 ## Resources Used
 
-[What actually helped, not a reading list. List things this story
-already shows you using: the doc you followed to set the environment
-up, the thread that explained the bug, the person who answered you.
-One real entry beats ten plausible ones.]
-
-- [Link to documentation that helped]
-- [Discussion, issue, or post that helped]
+- [Logixia CONTRIBUTING.md](https://github.com/Logixia/logixia/blob/main/CONTRIBUTING.md): the branch, test and pre-PR commands (`typecheck`, `lint:check`, `format:check`, `test`) that became my ship manifest.
+- [Issue #10](https://github.com/Logixia/logixia/issues/10): the checklist of cases and the hint about spying on `process.stderr.write`.
+- The existing `src/utils/__tests__/typed-logger.test.ts` in the repo: the fake logger and stderr-spy setup my new tests reuse.
+- [Logixia's PR template](https://github.com/Logixia/logixia/blob/main/.github/pull_request_template.md): the sections my PR description follows.
